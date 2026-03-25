@@ -2,31 +2,25 @@ import streamlit as st
 import joblib
 import numpy as np
 import pandas as pd
-
-# ── Config page ──────────────────────────────────────────────────────────────
+ 
 st.set_page_config(
     page_title="Wine Quality Predictor",
-    page_icon="🍷",
     layout="centered",
 )
-
-# ── Chargement du modèle et du scaler ────────────────────────────────────────
+ 
 @st.cache_resource(show_spinner="Chargement du modèle…")
 def load_model():
     model  = joblib.load("wine_quality_model.pkl")
     scaler = joblib.load("wine_quality_scaler.pkl")
     return model, scaler
-
+ 
 model, scaler = load_model()
-
-# ── UI ───────────────────────────────────────────────────────────────────────
-st.title("🍷 Wine Quality Predictor")
+ 
+st.title("Wine Quality Predictor")
 st.markdown("Renseigne les composantes chimiques du vin pour prédire sa qualité (note de **0 à 10**).")
 st.divider()
-
-# Formulaire en 2 colonnes
 col1, col2 = st.columns(2)
-
+ 
 with col1:
     fixed_acidity      = st.slider("Fixed Acidity",        3.8,  16.0,  7.4,  step=0.1)
     volatile_acidity   = st.slider("Volatile Acidity",     0.08,  1.6,  0.52, step=0.01)
@@ -34,7 +28,7 @@ with col1:
     residual_sugar     = st.slider("Residual Sugar",       0.6,  66.0,  2.2,  step=0.1)
     chlorides          = st.slider("Chlorides",            0.009, 0.62, 0.047, step=0.001, format="%.3f")
     free_so2           = st.slider("Free Sulfur Dioxide",  1.0, 290.0, 35.0,  step=1.0)
-
+ 
 with col2:
     total_so2          = st.slider("Total Sulfur dioxide", 6.0, 440.0, 120.0, step=1.0)
     density            = st.slider("Density",              0.987, 1.039, 0.9946, step=0.0001, format="%.4f")
@@ -42,32 +36,28 @@ with col2:
     sulphates          = st.slider("Sulphates",            0.22,  2.0,   0.53,  step=0.01)
     alcohol            = st.slider("Alcohol (%)",          8.0,  15.0,  10.4,  step=0.1)
     wine_type          = st.selectbox("Type de vin", ["Rouge", "Blanc"])
-
+ 
 st.divider()
-
-# ── Prédiction ───────────────────────────────────────────────────────────────
+ 
 if st.button("🔍 Prédire la qualité", use_container_width=True, type="primary"):
     type_encoded = 0 if wine_type == "Rouge" else 1
-
-    # Scaler est fit sur les 11 variables numériques uniquement (sans type)
+ 
     numerical = np.array([[
         fixed_acidity, volatile_acidity, citric_acid, residual_sugar,
         chlorides, free_so2, total_so2, density, ph, sulphates, alcohol
     ]])
     numerical_scaled = scaler.transform(numerical)
-
-    # On rajoute type (non scalé) à la fin
+ 
     features_scaled = np.append(numerical_scaled, [[type_encoded]], axis=1)
     prediction      = model.predict(features_scaled)[0]
-
-    # Couleur selon la note
+ 
     if prediction <= 4:
         color, label = "#e74c3c", "Mauvaise qualité"
     elif prediction <= 6:
         color, label = "#f39c12", "Qualité moyenne"
     else:
         color, label = "#2ecc71", "Bonne qualité"
-
+ 
     st.markdown(
         f"""
         <div style="
@@ -83,8 +73,7 @@ if st.button("🔍 Prédire la qualité", use_container_width=True, type="primar
         """,
         unsafe_allow_html=True,
     )
-
-    # Récap des valeurs saisies
+ 
     with st.expander("Voir les valeurs saisies"):
         recap = pd.DataFrame({
             "Variable": [
