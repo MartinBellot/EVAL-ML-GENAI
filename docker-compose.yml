@@ -1,0 +1,53 @@
+
+services:
+  ollama:
+    image: ollama/ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    healthcheck:
+      test: ["CMD", "ollama", "list"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  ollama-init:
+    image: ollama/ollama
+    environment:
+      - OLLAMA_HOST=http://ollama:11434
+    depends_on:
+      ollama:
+        condition: service_healthy
+    entrypoint: ["/bin/sh", "-c", "ollama pull nomic-embed-text && ollama pull phi3.5"]
+    restart: "no"
+
+  app_ex5:
+    build:
+      context: .
+      dockerfile: exercice5/Dockerfile
+    ports:
+      - "8501:8501"
+    volumes:
+      - .:/app
+    command: streamlit run exercice5/app.py --server.port 8501 --server.address 0.0.0.0
+
+  app_ex6:
+    build:
+      context: .
+      dockerfile: exercice6/Dockerfile
+    ports:
+      - "8502:8502"
+    volumes:
+      - .:/app
+    environment:
+      - OLLAMA_HOST=http://ollama:11434
+    depends_on:
+      ollama:
+        condition: service_healthy
+      ollama-init:
+        condition: service_completed_successfully
+    command: streamlit run exercice6/app.py --server.port 8502 --server.address 0.0.0.0
+
+volumes:
+  ollama_data:

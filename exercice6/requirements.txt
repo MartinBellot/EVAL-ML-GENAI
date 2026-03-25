@@ -1,0 +1,8 @@
+streamlit
+joblib
+pandas
+scikit-learn
+pymupdf
+ollama
+chromadb
+langchain-text-splitters

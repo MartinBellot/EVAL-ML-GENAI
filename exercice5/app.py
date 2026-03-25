@@ -40,16 +40,22 @@ with col2:
 st.divider()
  
 if st.button("🔍 Prédire la qualité", use_container_width=True, type="primary"):
-    type_encoded = 0 if wine_type == "Rouge" else 1
- 
-    numerical = np.array([[
-        fixed_acidity, volatile_acidity, citric_acid, residual_sugar,
-        chlorides, free_so2, total_so2, density, ph, sulphates, alcohol
-    ]])
-    numerical_scaled = scaler.transform(numerical)
- 
-    features_scaled = np.append(numerical_scaled, [[type_encoded]], axis=1)
-    prediction      = model.predict(features_scaled)[0]
+    type_encoded = 1 if wine_type == "Rouge" else 0
+
+    cols_to_scale = [
+        'fixed acidity', 'volatile acidity', 'citric acid', 'residual sugar',
+        'chlorides', 'free sulfur dioxide', 'total sulfur dioxide', 'density',
+        'pH', 'sulphates', 'alcohol'
+    ]
+    sample = pd.DataFrame([{
+        'fixed acidity': fixed_acidity, 'volatile acidity': volatile_acidity,
+        'citric acid': citric_acid, 'residual sugar': residual_sugar,
+        'chlorides': chlorides, 'free sulfur dioxide': free_so2,
+        'total sulfur dioxide': total_so2, 'density': density,
+        'pH': ph, 'sulphates': sulphates, 'alcohol': alcohol, 'type': type_encoded
+    }])
+    sample[cols_to_scale] = scaler.transform(sample[cols_to_scale])
+    prediction = model.predict(sample)[0]
  
     if prediction <= 4:
         color, label = "#e74c3c", "Mauvaise qualité"
@@ -81,8 +87,9 @@ if st.button("🔍 Prédire la qualité", use_container_width=True, type="primar
                 "Chlorides", "Free SO₂", "Total SO₂", "Density", "pH", "Sulphates", "Alcohol", "Type"
             ],
             "Valeur": [
-                fixed_acidity, volatile_acidity, citric_acid, residual_sugar,
-                chlorides, free_so2, total_so2, density, ph, sulphates, alcohol, wine_type
+                str(fixed_acidity), str(volatile_acidity), str(citric_acid), str(residual_sugar),
+                str(chlorides), str(free_so2), str(total_so2), str(density), str(ph),
+                str(sulphates), str(alcohol), wine_type
             ]
         })
         st.dataframe(recap, use_container_width=True, hide_index=True)
